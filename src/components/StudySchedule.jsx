@@ -1,6 +1,7 @@
 import '../styles/ScheduleStyles.css';
 import ProgressTracker from './ProgressTracker';
 import TopicBreakdown from './TopicBreakdown';
+import StudyAnalytics from './StudyAnalytics';
 
 const StudySchedule = ({ schedule, resetSchedule }) => {
   const { schedule: dailySchedule, totalStudyHours } = schedule;
@@ -40,6 +41,14 @@ const StudySchedule = ({ schedule, resetSchedule }) => {
     });
   });
   
+  const isRestDay = (day) => {
+    return day.subjects.length === 0;
+  };
+
+  const isCustomRestDay = (day) => {
+    return isRestDay(day) && day.day % 6 !== 0;
+  };
+
   return (
     <div className="schedule-container">
       <div className="schedule-header">
@@ -72,7 +81,10 @@ const StudySchedule = ({ schedule, resetSchedule }) => {
       <div className="schedule-overflow">
         <div className="days-grid">
           {dailySchedule.map((day) => (
-            <div key={day.day} className="day-card">
+            <div 
+              key={day.day} 
+              className={`day-card ${isRestDay(day) ? 'rest-day-card' : ''} ${isCustomRestDay(day) ? 'custom-rest-day-card' : ''}`}
+            >
               <h3 className="day-title">
                 Day {day.day}
               </h3>
@@ -104,9 +116,9 @@ const StudySchedule = ({ schedule, resetSchedule }) => {
                   </div>
                 ))}
                 
-                {day.subjects.length === 0 && (
-                  <div className="rest-day">
-                    Rest day
+                {isRestDay(day) && (
+                  <div className={`rest-day ${isCustomRestDay(day) ? 'custom-rest-day' : ''}`}>
+                    {isCustomRestDay(day) ? 'Custom Rest Day' : 'Rest Day'}
                   </div>
                 )}
               </div>
@@ -115,13 +127,13 @@ const StudySchedule = ({ schedule, resetSchedule }) => {
         </div>
       </div>
       
-      {}
+      <StudyAnalytics schedule={schedule} />
+      
       <ProgressTracker 
         schedule={schedule}
         subjects={allSubjects}
       />
       
-      {}
       <TopicBreakdown 
         subjects={allSubjects}
       />

@@ -10,7 +10,7 @@ import solver from 'javascript-lp-solver';
  * @returns {Object} 
  */
 export function generateOptimizedSchedule(subjects, constraints) {
-  const { maxHoursPerDay, daysUntilExam, minStudyHoursTotal } = constraints;
+  const { maxHoursPerDay, daysUntilExam, minStudyHoursTotal, customRestDays = [] } = constraints;
   
 
   const variables = {};
@@ -39,12 +39,32 @@ export function generateOptimizedSchedule(subjects, constraints) {
     total: { min: adjustedMinStudyHours },
   };
   
-
+  // First, identify all rest days (both fixed and custom)
+  const restDays = new Set();
+  
+  // Add fixed rest days (every 6th day)
+  for (let day = 1; day <= totalDays; day++) {
+    if (day % 6 === 0) {
+      restDays.add(day);
+    }
+  }
+  
+  // Add custom rest days
+  customRestDays.forEach(day => {
+    if (day >= 1 && day <= totalDays) {
+      restDays.add(day);
+    }
+  });
+  
+  // Now set up constraints for each day
   for (let day = 1; day <= totalDays; day++) {
     modelConstraints[`day_${day}`] = { max: maxHoursPerDay };
     
-
-    if (day % 6 !== 0) { 
+    // If it's a rest day (either fixed or custom), set max hours to 0
+    if (restDays.has(day)) {
+      modelConstraints[`day_${day}`].max = 0;
+    } else {
+      // For non-rest days, enforce minimum study hours
       modelConstraints[`day_${day}`].min = 1;
     }
   }
@@ -166,37 +186,47 @@ function countRestDays(schedule) {
 }
 
 function createFallbackSchedule(subjects, constraints) {
-  const { maxHoursPerDay, daysUntilExam } = constraints;
+  const { maxHoursPerDay, daysUntilExam, customRestDays = [] } = constraints;
   const schedule = [];
   let totalHours = 0;
   
-
+  // Identify all rest days (both fixed and custom)
+  const restDays = new Set();
+  
+  // Add fixed rest days (every 6th day)
+  for (let day = 1; day <= daysUntilExam; day++) {
+    if (day % 6 === 0) {
+      restDays.add(day);
+    }
+  }
+  
+  // Add custom rest days
+  customRestDays.forEach(day => {
+    if (day >= 1 && day <= daysUntilExam) {
+      restDays.add(day);
+    }
+  });
+  
   const sortedSubjects = [...subjects].sort((a, b) => 
     (b.importance * b.difficulty) - (a.importance * a.difficulty)
   );
   
-
   for (let day = 1; day <= daysUntilExam; day++) {
     const daySchedule = {
       day,
       subjects: []
     };
     
-
-    const restDays = Math.min(3, Math.floor(daysUntilExam / 7));
-    const isRestDay = day % 7 === 0 && Math.floor(day / 7) <= restDays;
+    // Check if it's a rest day (either fixed or custom)
+    const isRestDay = restDays.has(day);
     
     if (!isRestDay) {
-
       let remainingHours = maxHoursPerDay;
       
-
       for (let i = 0; i < sortedSubjects.length && remainingHours > 0; i++) {
-
         const subjectIndex = (i + day) % sortedSubjects.length;
         const subject = sortedSubjects[subjectIndex];
         
-
         const hours = Math.min(remainingHours, 2 + Math.floor(subject.importance / 4));
         
         if (hours > 0) {

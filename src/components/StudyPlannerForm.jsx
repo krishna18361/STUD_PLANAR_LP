@@ -11,6 +11,7 @@ const StudyPlannerForm = ({ setSchedule }) => {
     daysUntilExam: 14,
     minStudyHoursTotal: 40
   });
+  const [customRestDays, setCustomRestDays] = useState([]);
   const [error, setError] = useState('');
 
   const handleAddSubject = () => {
@@ -35,6 +36,24 @@ const StudyPlannerForm = ({ setSchedule }) => {
     setConstraints({ ...constraints, [field]: value });
   };
 
+  const handleAddRestDay = () => {
+    if (customRestDays.length < constraints.daysUntilExam) {
+      setCustomRestDays([...customRestDays, { day: 1 }]);
+    }
+  };
+
+  const handleRemoveRestDay = (index) => {
+    const newRestDays = [...customRestDays];
+    newRestDays.splice(index, 1);
+    setCustomRestDays(newRestDays);
+  };
+
+  const handleRestDayChange = (index, value) => {
+    const newRestDays = [...customRestDays];
+    newRestDays[index] = { day: Number(value) };
+    setCustomRestDays(newRestDays);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
@@ -45,9 +64,43 @@ const StudyPlannerForm = ({ setSchedule }) => {
       setError('Please fill in all subject names');
       return;
     }
+
+    // Validate rest days
+    const invalidRestDays = customRestDays.filter(rd => 
+      rd.day < 1 || rd.day > constraints.daysUntilExam
+    );
+    if (invalidRestDays.length > 0) {
+      setError('Rest days must be between 1 and days until exam');
+      return;
+    }
+    
+    // Check for duplicate rest days
+    const restDayValues = customRestDays.map(rd => rd.day);
+    const uniqueRestDays = new Set(restDayValues);
+    if (uniqueRestDays.size !== restDayValues.length) {
+      setError('You have duplicate rest days. Please remove duplicates.');
+      return;
+    }
+    
+    // Check if rest days overlap with fixed rest days
+    const fixedRestDays = [];
+    for (let day = 1; day <= constraints.daysUntilExam; day++) {
+      if (day % 6 === 0) {
+        fixedRestDays.push(day);
+      }
+    }
+    
+    const overlappingDays = restDayValues.filter(day => fixedRestDays.includes(day));
+    if (overlappingDays.length > 0) {
+      setError(`Days ${overlappingDays.join(', ')} are already fixed rest days. Please choose different days.`);
+      return;
+    }
     
     try {
-      const result = generateOptimizedSchedule(subjects, constraints);
+      const result = generateOptimizedSchedule(subjects, {
+        ...constraints,
+        customRestDays: customRestDays.map(rd => rd.day)
+      });
       
       if (!result.feasible) {
         setError('No feasible solution. Try adjusting your constraints.');
@@ -167,6 +220,45 @@ const StudyPlannerForm = ({ setSchedule }) => {
               className="form-input"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="form-section">
+        <h2 className="section-heading">Custom Rest Days</h2>
+        <p className="section-description">Add specific days you want to take as rest days</p>
+        
+        <div className="rest-days-container">
+          {customRestDays.map((restDay, index) => (
+            <div key={index} className="rest-day-item">
+              <div className="form-group">
+                <label className="form-label">Rest Day</label>
+                <input
+                  type="number"
+                  min="1"
+                  max={constraints.daysUntilExam}
+                  value={restDay.day}
+                  onChange={(e) => handleRestDayChange(index, e.target.value)}
+                  className="form-input"
+                />
+              </div>
+              <button
+                type="button"
+                className="remove-button"
+                onClick={() => handleRemoveRestDay(index)}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          
+          <button
+            type="button"
+            className="add-button"
+            onClick={handleAddRestDay}
+            disabled={customRestDays.length >= constraints.daysUntilExam}
+          >
+            Add Rest Day
+          </button>
         </div>
       </div>
 

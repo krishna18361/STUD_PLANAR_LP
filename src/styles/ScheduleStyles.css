@@ -162,12 +162,27 @@
   border-radius: 9999px;
 }
 
+.rest-day-card {
+  background-color: #f8f9fa;
+  border: 1px solid #e2e8f0;
+}
+
+.custom-rest-day-card {
+  background-color: #fff5f5;
+  border: 1px solid #fed7d7;
+}
+
 .rest-day {
   font-size: 0.875rem;
   color: #718096;
   padding: 0.5rem 0;
   text-align: center;
   font-style: italic;
+}
+
+.custom-rest-day {
+  color: #e53e3e;
+  font-weight: 500;
 }
 
 .info-box {
