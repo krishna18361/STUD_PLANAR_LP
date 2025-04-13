@@ -9,6 +9,29 @@ A React-based web application that generates optimized study schedules for stude
 - Prevent burnout with balanced daily workloads
 - Responsive and intuitive interface
 
+## Environment Setup
+
+1. Copy the `.env.example` file to create your own `.env` file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Update the values in your `.env` file with your specific configuration:
+   - `VITE_API_URL`: Your API endpoint URL
+   - `VITE_API_KEY`: Your API key (if required)
+   - Adjust other settings according to your needs
+
+3. The following environment variables are available:
+   - API Configuration: `VITE_API_URL`, `VITE_API_KEY`
+   - Application Settings: `VITE_APP_NAME`, `VITE_APP_VERSION`
+   - Feature Flags: `VITE_ENABLE_ANALYTICS`, `VITE_ENABLE_NOTIFICATIONS`
+   - Study Plan Defaults: `VITE_DEFAULT_MAX_HOURS_PER_DAY`, `VITE_DEFAULT_MIN_STUDY_HOURS`, `VITE_DEFAULT_DAYS_UNTIL_EXAM`
+   - UI Configuration: `VITE_THEME`, `VITE_LANGUAGE`
+   - Storage Configuration: `VITE_STORAGE_TYPE`
+   - Development Settings: `VITE_DEBUG_MODE`, `VITE_LOG_LEVEL`
+
+Note: The `.env` file is ignored by git to keep sensitive information secure.
+
 ## Linear Programming Implementation
 
 This application uses linear programming (LP) to solve the complex problem of time allocation across multiple subjects while satisfying various constraints. The LP model:
